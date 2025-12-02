@@ -36,7 +36,10 @@ def main():
     df_traffic_bikes = df_traffic[df_traffic['Navn'] == 'Lysaker sykkel'].copy()
 
     df_dagsdata_sykkel = date_agg_df(df_traffic_bikes, 'Fra', unit_column='Trafikkmengde')
+    df_dagsdata_biler = date_agg_df(df_traffic_cars, 'Fra', unit_column='Trafikkmengde')
 
+    print(df_dagsdata_biler.describe())
+    print(df_dagsdata_sykkel.describe())
 
     fig, ax1 = plt.subplots(figsize=(16, 13))  # Plot size
     ax2 = ax1.twinx()  # Constructing y2 axis
