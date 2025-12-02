@@ -13,6 +13,11 @@ def filter_df(df, column, search):
     new_df = df[mask].copy()
     return new_df
 
+def date_agg_df(df, date_column, unit_column):
+    df['Dato_Aggregering'] = df[date_column].dt.date
+    new_df = df.groupby('Dato_Aggregering')[unit_column].sum().reset_index()
+    new_df['Dato_Aggregering'] = pd.to_datetime(new_df['Dato_Aggregering'])
+    return new_df
 
 
 
@@ -27,30 +32,30 @@ def main():
     df_traffic['Til'] = pd.to_datetime(df_traffic['Til'], utc=True, errors='coerce')
     df_weather['dato'] = pd.to_datetime(df_weather['dato'], utc=True, errors='coerce', format='%d.%m.%Y')
 
-    #convert_datetime(df_traffic, 'Fra')
-    #convert_datetime(df_traffic, 'Til')
-    #convert_datetime(df_weather, 'dato')
-    print(df_traffic.head())
-    print(df_traffic.tail())
-
     df_traffic_cars = df_traffic[df_traffic['Navn'] == 'Maritim'].copy()
     df_traffic_bikes = df_traffic[df_traffic['Navn'] == 'Lysaker sykkel'].copy()
 
-    print(df_traffic_bikes)
+    df_dagsdata_sykkel = date_agg_df(df_traffic_bikes, 'Fra', unit_column='Trafikkmengde')
 
-    df_traffic_bikes['Dato_Aggregering'] = df_traffic_bikes['Fra'].dt.date
-    df_dagsdata_sykkel = df_traffic_bikes.groupby('Dato_Aggregering')['Trafikkmengde'].sum().reset_index()
-    df_dagsdata_sykkel['Dato_Aggregering'] = pd.to_datetime(df_dagsdata_sykkel['Dato_Aggregering'])
-#    print(df_traffic.head(), df_traffic.describe(), df_traffic.dtypes)
-#    print("*****")
-#    print(df_weather.head(), df_weather.describe(), df_weather.dtypes)
+
+    fig, ax1 = plt.subplots(figsize=(16, 13))  # Plot size
+    ax2 = ax1.twinx()  # Constructing y2 axis
+    ax1.set_xlabel('Måned', color='Black')
+    ax1.grid(True, linestyle='--', color='gray', alpha=0.5)
     x = df_weather['dato']
     y = df_weather['temperatur_dogn']
-    z = df_dagsdata_sykkel['Trafikkmengde']
-    plt.plot(x, y, color="lightblue")
-    plt.scatter(df_dagsdata_sykkel['Dato_Aggregering'], z, color="pink")
+    z = df_weather['nedbor_dogn']
+    bikes = df_dagsdata_sykkel['Trafikkmengde']
 
+    ax1.plot(x, y, color="lightblue", label='Temperatur')
+    ax1.plot(x,z, color='lightgreen', label='Nedbor dogn')
+    ax1.set_ylabel('Temperatur', color='Black')
+    ax2.scatter(df_dagsdata_sykkel['Dato_Aggregering'], bikes, color="pink", label='Registrerte sykler')
 
+    ax2.set_ylabel('Registrerte sykler', color='Black')
+
+    fig.legend()
+    fig.tight_layout()
     plt.show()
 
 if __name__ == '__main__':
